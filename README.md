@@ -15,3 +15,5 @@ The script will perform an export, zip and encrypt it, store 7 daily, 12 monthly
 ## Perform backup
 
 `./backup_paperless.sh`
+
+![Screenshot 2023-12-11 at 16 39 31](https://github.com/smichaelsen/backup-paperless/assets/912435/f35ea425-646c-4fbc-bee8-ad024df2d8f6)
