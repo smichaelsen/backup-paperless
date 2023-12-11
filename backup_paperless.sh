@@ -18,14 +18,6 @@ REMOTE_DEST="${BACKUP_REMOTE_DEST}"
 BACKUP_SRC="/mnt/user/appdata/paperless-ngx/export"
 BACKUP_DEST="backup.tar.gz"
 ENCRYPTED_DEST="backup.tar.gz.enc"
-DAILY_BACKUP_DIR="./backups/daily"
-MONTHLY_BACKUP_DIR="./backups/monthly"
-YEARLY_BACKUP_DIR="./backups/yearly"
-
-# Ensure backup directories exist
-mkdir -p "${DAILY_BACKUP_DIR}"
-mkdir -p "${MONTHLY_BACKUP_DIR}"
-mkdir -p "${YEARLY_BACKUP_DIR}"
 
 echo "Starting export of paperless data..."
 # Export data from paperless
@@ -54,28 +46,30 @@ else
     exit 1
 fi
 
-echo "Copying to daily backup folder..."
-# Copy to daily backup folder with day of the week
-cp "${ENCRYPTED_DEST}" "${DAILY_BACKUP_DIR}/backup_$(date +%a).tar.gz.enc"
+# Function to copy backup to remote server using scp
+copy_to_remote_scp() {
+    local remote_dir=$1
+    local remote_file="backup_$(date +${2}).tar.gz.enc"
+    echo "Copying to ${remote_dir}..."
 
-echo "Copying to monthly backup folder..."
-# Copy to monthly backup folder
-cp "${ENCRYPTED_DEST}" "${MONTHLY_BACKUP_DIR}/backup_$(date +%-m).tar.gz.enc"
+    # Ensure remote directory exists
+    ssh "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DEST}/${remote_dir}"
 
-echo "Copying to yearly backup folder..."
-# Copy to yearly backup folder
-cp "${ENCRYPTED_DEST}" "${YEARLY_BACKUP_DIR}/backup_$(date +%Y).tar.gz.enc"
+    # Copy the file
+    if scp "${ENCRYPTED_DEST}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DEST}/${remote_dir}/${remote_file}"; then
+        echo "Copy to ${remote_dir} successful."
+    else
+        echo "Copy to ${remote_dir} failed!" >&2
+        return 1
+    fi
+}
+
+# Copy to respective remote directories
+copy_to_remote_scp "daily" "%a" || exit 1
+copy_to_remote_scp "monthly" "%-m" || exit 1
+copy_to_remote_scp "yearly" "%Y" || exit 1
 
 echo "Cleaning up temporary archives..."
 rm -f "${ENCRYPTED_DEST}" "${BACKUP_DEST}"
-
-echo "Syncing to the remote machine..."
-# Sync the backup directory to the remote machine
-if rsync -avz --delete "${DAILY_BACKUP_DIR}" "${MONTHLY_BACKUP_DIR}" "${YEARLY_BACKUP_DIR}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DEST}"; then
-    echo "Sync to remote machine successful."
-else
-    echo "Sync to remote machine failed!" >&2
-    exit 1
-fi
 
 echo "Backup process completed successfully."
