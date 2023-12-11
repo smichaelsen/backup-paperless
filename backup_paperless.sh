@@ -19,30 +19,37 @@ BACKUP_SRC="/mnt/user/appdata/paperless-ngx/export"
 BACKUP_DEST="backup.tar.gz"
 ENCRYPTED_DEST="backup.tar.gz.enc"
 
-echo "Starting export of paperless data..."
-if docker exec paperless-ngx document_exporter /usr/src/paperless/export; then
-    echo "Data export successful."
+echo "🤗  Let's make a backup of your Paperless-NGX data!"
+echo ""
+
+echo -n "  📤  Starting export of paperless data..."
+if docker exec paperless-ngx document_exporter /usr/src/paperless/export > /dev/null 2>&1; then
+    echo " ✅"
 else
-    echo "Data export failed!" >&2
+    echo " ❌ Data export failed!" >&2
     exit 1
 fi
 
-echo "Creating gzipped tar archive..."
-if tar -czf "${BACKUP_DEST}" "${BACKUP_SRC}"; then
-    echo "Archive created successfully."
+echo -n "  📦  Creating gzipped tar archive..."
+BACKUP_DEST=$(realpath "${BACKUP_DEST}")
+cd "$(dirname "${BACKUP_SRC}")"
+if tar -czf "${BACKUP_DEST}" "$(basename "${BACKUP_SRC}")"; then
+    echo " ✅"
 else
-    echo "Archive creation failed!" >&2
+    echo " ❌ Archive creation failed!" >&2
     exit 1
 fi
+cd - > /dev/null 2>&1
 
-echo "Clearing export directory..."
+echo -n "  🧹  Clearing export directory..."
 rm -rf "${BACKUP_SRC}/*"
+echo " ✅"
 
-echo "Encrypting the archive..."
+echo -n "  🔐  Encrypting the archive..."
 if openssl enc -aes-256-cbc -pbkdf2 -iter 10000 -salt -in "${BACKUP_DEST}" -out "${ENCRYPTED_DEST}" -k "${PASSWORD}"; then
-    echo "Encryption successful."
+    echo " ✅"
 else
-    echo "Encryption failed!" >&2
+    echo " ❌ Encryption failed!" >&2
     exit 1
 fi
 
@@ -50,16 +57,16 @@ fi
 copy_to_remote_scp() {
     local remote_dir=$1
     local remote_file="backup_$(date +${2}).tar.gz.enc"
-    echo "Copying to ${remote_dir}..."
+    echo -n "  ☁️  Copying to ${remote_dir}..."
 
     # Ensure remote directory exists
     ssh "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DEST}/${remote_dir}"
 
     # Copy the file
-    if scp "${ENCRYPTED_DEST}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DEST}/${remote_dir}/${remote_file}"; then
-        echo "Copy to ${remote_dir} successful."
+    if scp "${ENCRYPTED_DEST}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DEST}/${remote_dir}/${remote_file}" > /dev/null; then
+        echo " ✅"
     else
-        echo "Copy to ${remote_dir} failed!" >&2
+        echo " ❌ Copy to ${remote_dir} failed!" >&2
         return 1
     fi
 }
@@ -69,7 +76,9 @@ copy_to_remote_scp "daily" "%a" || exit 1
 copy_to_remote_scp "monthly" "%-m" || exit 1
 copy_to_remote_scp "yearly" "%Y" || exit 1
 
-echo "Cleaning up temporary archives..."
+echo -n "  🧹  Cleaning up temporary archives..."
 rm -f "${ENCRYPTED_DEST}" "${BACKUP_DEST}"
+echo " ✅"
 
-echo "Backup process completed successfully."
+echo ""
+echo "👌  Backup process completed successfully."
