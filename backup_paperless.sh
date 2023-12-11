@@ -20,7 +20,6 @@ BACKUP_DEST="backup.tar.gz"
 ENCRYPTED_DEST="backup.tar.gz.enc"
 
 echo "Starting export of paperless data..."
-# Export data from paperless
 if docker exec paperless-ngx document_exporter /usr/src/paperless/export; then
     echo "Data export successful."
 else
@@ -29,7 +28,6 @@ else
 fi
 
 echo "Creating gzipped tar archive..."
-# Create a gzipped tar archive
 if tar -czf "${BACKUP_DEST}" "${BACKUP_SRC}"; then
     echo "Archive created successfully."
 else
@@ -37,8 +35,10 @@ else
     exit 1
 fi
 
+echo "Clearing export directory..."
+rm -rf "${BACKUP_SRC}/*"
+
 echo "Encrypting the archive..."
-# Encrypt the archive
 if openssl enc -aes-256-cbc -pbkdf2 -iter 10000 -salt -in "${BACKUP_DEST}" -out "${ENCRYPTED_DEST}" -k "${PASSWORD}"; then
     echo "Encryption successful."
 else
