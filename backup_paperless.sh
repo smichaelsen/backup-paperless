@@ -9,13 +9,8 @@ fi
 : ${BACKUP_REMOTE_USER:?}
 : ${BACKUP_REMOTE_HOST:?}
 : ${BACKUP_REMOTE_DEST:?}
+: ${EXPORT_MOUNT:?}
 
-PASSWORD="${BACKUP_PASSWORD}"
-REMOTE_USER="${BACKUP_REMOTE_USER}"
-REMOTE_HOST="${BACKUP_REMOTE_HOST}"
-REMOTE_DEST="${BACKUP_REMOTE_DEST}"
-
-EXPORT_MOUNT="/mnt/user/appdata/paperless-ngx/export"
 BACKUP_DEST="backup.tar.gz"
 ENCRYPTED_DEST="backup.tar.gz.enc"
 
@@ -50,7 +45,7 @@ else
 fi
 
 echo -n "  🔐  Encrypting the archive..."
-if openssl enc -aes-256-cbc -pbkdf2 -iter 10000 -salt -in "${BACKUP_DEST}" -out "${ENCRYPTED_DEST}" -k "${PASSWORD}"; then
+if openssl enc -aes-256-cbc -pbkdf2 -iter 10000 -salt -in "${BACKUP_DEST}" -out "${ENCRYPTED_DEST}" -k "${BACKUP_PASSWORD}"; then
     rm -f "${BACKUP_DEST}"
     echo " ✅"
 else
@@ -65,10 +60,10 @@ copy_to_remote_scp() {
     echo -n "  ☁️  Copying to remote \"${remote_dir}\"..."
 
     # Ensure remote directory exists
-    ssh "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DEST}/${remote_dir}"
+    ssh "${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}" "mkdir -p ${BACKUP_REMOTE_DEST}/${remote_dir}"
 
     # Copy the file
-    if scp "${ENCRYPTED_DEST}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DEST}/${remote_dir}/${remote_file}" > /dev/null; then
+    if scp "${ENCRYPTED_DEST}" "${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}:${BACKUP_REMOTE_DEST}/${remote_dir}/${remote_file}" > /dev/null; then
         echo " ✅"
     else
         echo " ❌ Copy to ${remote_dir} failed!" >&2

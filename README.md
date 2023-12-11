@@ -1,6 +1,6 @@
 # Backup your paperless installation
 
-This assumes you have a paperless-ngx installation running as docker container called `paperless-ngx` and its export folder is mounted to your machine at `/mnt/user/appdata/paperless-ngx/export` (we could add environment variables for those assumptions if needed).
+This assumes you have a paperless-ngx installation running as docker container called `paperless-ngx`.
 
 The script will perform an export, zip and encrypt it, store 7 daily, 12 monthly and unlimited yearly backups and the rsync the backups to a specified remote server.
 
@@ -10,6 +10,7 @@ The script will perform an export, zip and encrypt it, store 7 daily, 12 monthly
 * Set a password (you will need it to decrypt the backups later).
 * Set remote server credentials
 * Make sure your machine has SSH access to the remote machine.
+* Adjust `EXPORT_MOUNT` to where the export folder of your paperless is mounted.
 
 ## Perform backup
 
