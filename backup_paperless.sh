@@ -42,8 +42,12 @@ fi
 cd - > /dev/null 2>&1
 
 echo -n "  🧹  Clearing export directory..."
-rm -rf "${BACKUP_SRC}/*"
-echo " ✅"
+if [[ -d "${BACKUP_SRC}" && -f "${BACKUP_SRC}/manifest.json" ]]; then
+    find "${BACKUP_SRC}" -type f -exec rm {} \;
+    echo " ✅"
+else
+    echo " ⚠️  Warning: Export directory not found or not a directory."
+fi
 
 echo -n "  🔐  Encrypting the archive..."
 if openssl enc -aes-256-cbc -pbkdf2 -iter 10000 -salt -in "${BACKUP_DEST}" -out "${ENCRYPTED_DEST}" -k "${PASSWORD}"; then
