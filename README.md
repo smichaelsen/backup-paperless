@@ -2,7 +2,7 @@
 
 This assumes you have a paperless-ngx installation running as docker container called `paperless-ngx`.
 
-The script will perform an export, zip and encrypt it, store 7 daily, 12 monthly and unlimited yearly backups and the rsync the backups to a specified remote server.
+The script will perform an export, zip and encrypt it and store 7 daily, 12 monthly and unlimited yearly backups on a specified remote server.
 
 ## Setup
 
