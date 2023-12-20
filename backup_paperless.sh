@@ -10,6 +10,7 @@ fi
 : ${BACKUP_REMOTE_HOST:?}
 : ${BACKUP_REMOTE_DEST:?}
 : ${EXPORT_MOUNT:?}
+: ${PAPERLESS_CONTAINER_NAME:?}
 
 BACKUP_DEST="backup.tar.gz"
 ENCRYPTED_DEST="backup.tar.gz.enc"
@@ -18,7 +19,7 @@ echo "🤗  Let's make a backup of your Paperless-NGX data!"
 echo ""
 
 echo -n "  📤  Exporting paperless data..."
-if docker exec paperless-ngx document_exporter /usr/src/paperless/export > /dev/null 2>&1; then
+if docker exec "${PAPERLESS_CONTAINER_NAME}" document_exporter /usr/src/paperless/export > /dev/null 2>&1; then
     echo " ✅"
 else
     echo " ❌ Data export failed!" >&2
