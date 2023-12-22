@@ -1,8 +1,14 @@
 #!/bin/bash
 
-if [ -f .env ]; then
-  source .env
+# Determine the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Load environment variables from .env file in the script's directory
+if [ ! -f "${SCRIPT_DIR}/.env" ]; then
+    echo "Error: .env file not found in ${SCRIPT_DIR}."
+    exit 1
 fi
+source "${SCRIPT_DIR}/.env"
 
 # Abort if any required environment variables are not set
 : ${BACKUP_PASSWORD:?}
