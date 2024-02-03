@@ -60,17 +60,15 @@ else
     exit 1
 fi
 
-# Function to copy backup to remote server using scp
 copy_to_remote_scp() {
-    local remote_dir=$1
-    local remote_file="backup_$(date +${2}).tar.gz.enc"
-    echo -n "  ☁️  Copying to remote \"${remote_dir}\"..."
+    local remote_file="backup.tar.gz.enc"
+    echo -n "  ☁️  Copying to remote ..."
 
     # Ensure remote directory exists
-    ssh "${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}" "mkdir -p ${BACKUP_REMOTE_DEST}/${remote_dir}"
+    ssh "${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}" "mkdir -p ${BACKUP_REMOTE_DEST}"
 
     # Copy the file
-    if scp "${ENCRYPTED_DEST}" "${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}:${BACKUP_REMOTE_DEST}/${remote_dir}/${remote_file}" > /dev/null; then
+    if scp "${ENCRYPTED_DEST}" "${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}:${BACKUP_REMOTE_DEST}/${remote_file}" > /dev/null; then
         echo " ✅"
     else
         echo " ❌ Copy to ${remote_dir} failed!" >&2
@@ -78,10 +76,7 @@ copy_to_remote_scp() {
     fi
 }
 
-# Copy to respective remote directories
-copy_to_remote_scp "daily" "%a" || exit 1
-#copy_to_remote_scp "monthly" "%-m" || exit 1
-#copy_to_remote_scp "yearly" "%Y" || exit 1
+copy_to_remote_scp || exit 1
 
 echo -n "  🧹  Cleaning up local archive..."
 rm -f "${ENCRYPTED_DEST}"
