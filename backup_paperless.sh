@@ -80,8 +80,8 @@ copy_to_remote_scp() {
 
 # Copy to respective remote directories
 copy_to_remote_scp "daily" "%a" || exit 1
-copy_to_remote_scp "monthly" "%-m" || exit 1
-copy_to_remote_scp "yearly" "%Y" || exit 1
+#copy_to_remote_scp "monthly" "%-m" || exit 1
+#copy_to_remote_scp "yearly" "%Y" || exit 1
 
 echo -n "  🧹  Cleaning up local archive..."
 rm -f "${ENCRYPTED_DEST}"
