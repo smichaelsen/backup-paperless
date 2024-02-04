@@ -57,7 +57,7 @@ copy_files() {
 
 # Function to remove files from CONSUME_FOLDER after successful copy
 remove_source_files() {
-    # Loop through each file in the CONSUME_FOLDER
+    echo -n "  🧹  Cleaning up consumption folder..."
     for file in "$CONSUME_FOLDER"/*; do
         # Skip if it's a directory
         [ -d "$file" ] && continue
@@ -66,7 +66,7 @@ remove_source_files() {
         rm "$file"
     done
 
-    echo "  🧹  Cleaning up consumption folder."
+    echo " ✅"
 }
 
 # Get the day of the week, month, and year
