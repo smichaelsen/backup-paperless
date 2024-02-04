@@ -14,22 +14,19 @@ source "${SCRIPT_DIR}/.env"
 : ${CONSUME_FOLDER:?}
 : ${TARGET_FOLDER:?}
 
-echo "CONSUME_FOLDER set to $CONSUME_FOLDER"
-echo "TARGET_FOLDER set to $TARGET_FOLDER"
+echo "🤗  Let's check for new backup archives to consume!"
+echo ""
 
 # Function to copy files from CONSUME_FOLDER to a subfolder of TARGET_FOLDER with a prefix
 copy_files() {
     local subfolder=$1
     local prefix=$2
 
-    echo "Preparing to copy files to the $subfolder folder with prefix $prefix..."
-
     # Path to the subfolder
     local subfolder_dir="${TARGET_FOLDER}/${subfolder}"
 
     # Create subfolder if it doesn't exist
     mkdir -p "$subfolder_dir"
-    echo "Ensured $subfolder_dir exists."
 
     # Loop through each file in the CONSUME_FOLDER
     for file in "$CONSUME_FOLDER"/*; do
@@ -43,13 +40,14 @@ copy_files() {
         local target_file="${subfolder_dir}/${prefix}_${filename}"
 
         # Copy the file to the target directory with prefix
+        echo -n "  ➡️  Copying $file to $target_file..."
         cp "$file" "$target_file"
 
         # Check if copy was successful
         if [ $? -eq 0 ]; then
-            echo "Successfully copied $file to $target_file."
+            echo "  ✅"
         else
-            echo "Copy failed. File $file was not copied to $target_file."
+            echo "  ❌  Copy failed. File $file was not copied to $target_file."
             return 1
         fi
     done
@@ -59,8 +57,6 @@ copy_files() {
 
 # Function to remove files from CONSUME_FOLDER after successful copy
 remove_source_files() {
-    echo "Removing source files from $CONSUME_FOLDER..."
-
     # Loop through each file in the CONSUME_FOLDER
     for file in "$CONSUME_FOLDER"/*; do
         # Skip if it's a directory
@@ -68,10 +64,9 @@ remove_source_files() {
 
         # Remove the file from the source directory
         rm "$file"
-        echo "Removed $file."
     done
 
-    echo "Source files removed successfully."
+    echo "  🧹  Cleaning up consumption folder."
 }
 
 # Get the day of the week, month, and year
@@ -79,21 +74,19 @@ DAY_OF_WEEK=$(date +%a)
 MONTH=$(date +%m)
 YEAR=$(date +%Y)
 
-echo "Today is $DAY_OF_WEEK, $MONTH $YEAR."
-
 # Check if the source directory is not empty
 if [ "$(ls -A "$CONSUME_FOLDER")" ]; then
-    echo "Files found in $CONSUME_FOLDER. Starting backup process..."
+    echo "  📥  Files found in $CONSUME_FOLDER."
 
     # Copy files to the daily, monthly, and yearly subfolders
     if copy_files "daily" "$DAY_OF_WEEK" && copy_files "monthly" "$MONTH" && copy_files "yearly" "$YEAR"; then
         # If all copies were successful, remove the files from the source directory
         remove_source_files
     else
-        echo "Some files were not copied successfully. Check the output for details."
+        echo "  ❌  Some files were not copied successfully. Check the output for details."
     fi
 else
-    echo "No files to backup. $CONSUME_FOLDER is empty."
+    echo "  📭  No files to backup. $CONSUME_FOLDER is empty."
 fi
 
 echo "Backup process completed."
